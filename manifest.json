@@ -1,0 +1,24 @@
+{
+
+  "author": "kennedy wambua",
+  "background_color": "#ffffff",
+  "description": "A Web App for converting Currency",
+  "display": "standalone",
+  "icons": [
+
+    {
+      "src": "https://homemix.github.io/currency-converter/",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+
+  ],
+  "manifest_version": 2,
+  "name": "Currency Converter",
+  "orientation": "portrait",
+  "short_name": "converter",
+  "start_url": "https://homemix.github.io/currency-converter/index.html",
+  "theme_color": "#000000",
+  "version": "0.1"
+
+}
