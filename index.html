@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+ 
+    <title>Currency Converter</title>
+
+    <!-- Bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" >
+ </head>
+  <body>
+    <div class="row">
+    <div class="center-block" style="width:400px;">
+    <form class="form-horizontal">
+      <fieldset>
+      <legend>Currency Converter</legend>
+          <div class="form-group">
+    <label for="amount">Enter Amount</label>
+    <input type="text" class="form-control" id="amountToConvert" name="amountToConvert">
+  </div>
+ <div class="form-group">
+    <label for="fromCurrency"> from Currency</label>
+    <select class="form-control" id="fromCurrency" name="fromCurrency">
+      
+     
+    </select>
+  </div>
+   <div class="form-group">
+    <label for="toCurrency">to Currency</label>
+    <select class="form-control" id="toCurrency" name="toCurrency">
+     
+    </select>
+  </div>
+ 
+  <button type="button"  class="btn btn-default" id="convert">Convert</button>
+<div class="form-group">
+    <label for="output">Output</label>
+    <input type="text" class="form-control" id="output" name="output" readonly>
+  </div>
+      </fieldset>
+    </form>
+	</div>
+	</div>
+		
+ 
+<script>
+
+
+if ('serviceWorker' in navigator) {
+	navigator.serviceWorker.register('/sw.js').then(function(registration) {
+    // Registration was successful
+    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+}).catch(function(err) {
+    // registration failed :(
+    	console.log('ServiceWorker registration failed: ', err);
+    });
+}
+
+</script> 
+   <script src="js/idb.js" type="module"></script>
+        <script src="js/data/data.js" type="module"></script>  
+  </body>
+  </html>
+	
