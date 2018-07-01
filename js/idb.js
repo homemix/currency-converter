@@ -1,26 +1,24 @@
-'use strict';
-
-(function() {
+((() => {
   function toArray(arr) {
     return Array.prototype.slice.call(arr);
   }
 
   function promisifyRequest(request) {
-    return new Promise(function(resolve, reject) {
-      request.onsuccess = function() {
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => {
         resolve(request.result);
       };
 
-      request.onerror = function() {
+      request.onerror = () => {
         reject(request.error);
       };
     });
   }
 
   function promisifyRequestCall(obj, method, args) {
-    var request;
-    var p = new Promise(function(resolve, reject) {
-      request = obj[method].apply(obj, args);
+    let request;
+    let p = new Promise((resolve, reject) => {
+      request = obj[method](...args);
       promisifyRequest(request).then(resolve, reject);
     });
 
@@ -29,20 +27,20 @@
   }
 
   function promisifyCursorRequestCall(obj, method, args) {
-    var p = promisifyRequestCall(obj, method, args);
-    return p.then(function(value) {
+    let p = promisifyRequestCall(obj, method, args);
+    return p.then(value => {
       if (!value) return;
       return new Cursor(value, p.request);
     });
   }
 
   function proxyProperties(ProxyClass, targetProp, properties) {
-    properties.forEach(function(prop) {
+    properties.forEach(prop => {
       Object.defineProperty(ProxyClass.prototype, prop, {
-        get: function() {
+        get() {
           return this[targetProp][prop];
         },
-        set: function(val) {
+        set(val) {
           this[targetProp][prop] = val;
         }
       });
@@ -50,7 +48,7 @@
   }
 
   function proxyRequestMethods(ProxyClass, targetProp, Constructor, properties) {
-    properties.forEach(function(prop) {
+    properties.forEach(prop => {
       if (!(prop in Constructor.prototype)) return;
       ProxyClass.prototype[prop] = function() {
         return promisifyRequestCall(this[targetProp], prop, arguments);
@@ -59,16 +57,16 @@
   }
 
   function proxyMethods(ProxyClass, targetProp, Constructor, properties) {
-    properties.forEach(function(prop) {
+    properties.forEach(prop => {
       if (!(prop in Constructor.prototype)) return;
       ProxyClass.prototype[prop] = function() {
-        return this[targetProp][prop].apply(this[targetProp], arguments);
+        return this[targetProp][prop](...arguments);
       };
     });
   }
 
   function proxyCursorRequestMethods(ProxyClass, targetProp, Constructor, properties) {
-    properties.forEach(function(prop) {
+    properties.forEach(prop => {
       if (!(prop in Constructor.prototype)) return;
       ProxyClass.prototype[prop] = function() {
         return promisifyCursorRequestCall(this[targetProp], prop, arguments);
@@ -117,15 +115,15 @@
     'delete'
   ]);
 
- 
-  ['advance', 'continue', 'continuePrimaryKey'].forEach(function(methodName) {
+
+  ['advance', 'continue', 'continuePrimaryKey'].forEach(methodName => {
     if (!(methodName in IDBCursor.prototype)) return;
     Cursor.prototype[methodName] = function() {
-      var cursor = this;
-      var args = arguments;
-      return Promise.resolve().then(function() {
-        cursor._cursor[methodName].apply(cursor._cursor, args);
-        return promisifyRequest(cursor._request).then(function(value) {
+      let cursor = this;
+      let args = arguments;
+      return Promise.resolve().then(() => {
+        cursor._cursor[methodName](...args);
+        return promisifyRequest(cursor._request).then(value => {
           if (!value) return;
           return new Cursor(value, cursor._request);
         });
@@ -133,17 +131,19 @@
     };
   });
 
-  function ObjectStore(store) {
-    this._store = store;
+  class ObjectStore {
+    constructor(store) {
+      this._store = store;
+    }
+
+    createIndex() {
+      return new Index(this._store.createIndex(...arguments));
+    }
+
+    index() {
+      return new Index(this._store.index(...arguments));
+    }
   }
-
-  ObjectStore.prototype.createIndex = function() {
-    return new Index(this._store.createIndex.apply(this._store, arguments));
-  };
-
-  ObjectStore.prototype.index = function() {
-    return new Index(this._store.index.apply(this._store, arguments));
-  };
 
   proxyProperties(ObjectStore, '_store', [
     'name',
@@ -173,24 +173,26 @@
     'deleteIndex'
   ]);
 
-  function Transaction(idbTransaction) {
-    this._tx = idbTransaction;
-    this.complete = new Promise(function(resolve, reject) {
-      idbTransaction.oncomplete = function() {
-        resolve();
-      };
-      idbTransaction.onerror = function() {
-        reject(idbTransaction.error);
-      };
-      idbTransaction.onabort = function() {
-        reject(idbTransaction.error);
-      };
-    });
-  }
+  class Transaction {
+    constructor(idbTransaction) {
+      this._tx = idbTransaction;
+      this.complete = new Promise((resolve, reject) => {
+        idbTransaction.oncomplete = () => {
+          resolve();
+        };
+        idbTransaction.onerror = () => {
+          reject(idbTransaction.error);
+        };
+        idbTransaction.onabort = () => {
+          reject(idbTransaction.error);
+        };
+      });
+    }
 
-  Transaction.prototype.objectStore = function() {
-    return new ObjectStore(this._tx.objectStore.apply(this._tx, arguments));
-  };
+    objectStore() {
+      return new ObjectStore(this._tx.objectStore(...arguments));
+    }
+  }
 
   proxyProperties(Transaction, '_tx', [
     'objectStoreNames',
@@ -201,15 +203,17 @@
     'abort'
   ]);
 
-  function UpgradeDB(db, oldVersion, transaction) {
-    this._db = db;
-    this.oldVersion = oldVersion;
-    this.transaction = new Transaction(transaction);
-  }
+  class UpgradeDB {
+    constructor(db, oldVersion, transaction) {
+      this._db = db;
+      this.oldVersion = oldVersion;
+      this.transaction = new Transaction(transaction);
+    }
 
-  UpgradeDB.prototype.createObjectStore = function() {
-    return new ObjectStore(this._db.createObjectStore.apply(this._db, arguments));
-  };
+    createObjectStore() {
+      return new ObjectStore(this._db.createObjectStore(...arguments));
+    }
+  }
 
   proxyProperties(UpgradeDB, '_db', [
     'name',
@@ -222,13 +226,15 @@
     'close'
   ]);
 
-  function DB(db) {
-    this._db = db;
-  }
+  class DB {
+    constructor(db) {
+      this._db = db;
+    }
 
-  DB.prototype.transaction = function() {
-    return new Transaction(this._db.transaction.apply(this._db, arguments));
-  };
+    transaction() {
+      return new Transaction(this._db.transaction(...arguments));
+    }
+  }
 
   proxyProperties(DB, '_db', [
     'name',
@@ -242,17 +248,17 @@
 
   // Add cursor iterators
   // TODO: remove this once browsers do the right thing with promises
-  ['openCursor', 'openKeyCursor'].forEach(function(funcName) {
-    [ObjectStore, Index].forEach(function(Constructor) {
+  ['openCursor', 'openKeyCursor'].forEach(funcName => {
+    [ObjectStore, Index].forEach(Constructor => {
       // Don't create iterateKeyCursor if openKeyCursor doesn't exist.
       if (!(funcName in Constructor.prototype)) return;
 
       Constructor.prototype[funcName.replace('open', 'iterate')] = function() {
-        var args = toArray(arguments);
-        var callback = args[args.length - 1];
-        var nativeObject = this._store || this._index;
-        var request = nativeObject[funcName].apply(nativeObject, args.slice(0, -1));
-        request.onsuccess = function() {
+        let args = toArray(arguments);
+        let callback = args[args.length - 1];
+        let nativeObject = this._store || this._index;
+        let request = nativeObject[funcName](...args.slice(0, -1));
+        request.onsuccess = () => {
           callback(request.result);
         };
       };
@@ -260,14 +266,14 @@
   });
 
   // polyfill getAll
-  [Index, ObjectStore].forEach(function(Constructor) {
+  [Index, ObjectStore].forEach(Constructor => {
     if (Constructor.prototype.getAll) return;
     Constructor.prototype.getAll = function(query, count) {
-      var instance = this;
-      var items = [];
+      let instance = this;
+      let items = [];
 
-      return new Promise(function(resolve) {
-        instance.iterateCursor(query, function(cursor) {
+      return new Promise(resolve => {
+        instance.iterateCursor(query, cursor => {
           if (!cursor) {
             resolve(items);
             return;
@@ -284,24 +290,22 @@
     };
   });
 
-  var exp = {
-    open: function(name, version, upgradeCallback) {
-      var p = promisifyRequestCall(indexedDB, 'open', [name, version]);
-      var request = p.request;
+  let exp = {
+    open(name, version, upgradeCallback) {
+      let p = promisifyRequestCall(indexedDB, 'open', [name, version]);
+      let request = p.request;
 
       if (request) {
-        request.onupgradeneeded = function(event) {
+        request.onupgradeneeded = event => {
           if (upgradeCallback) {
             upgradeCallback(new UpgradeDB(request.result, event.oldVersion, request.transaction));
           }
         };
       }
 
-      return p.then(function(db) {
-        return new DB(db);
-      });
+      return p.then(db => new DB(db));
     },
-    delete: function(name) {
+    delete(name) {
       return promisifyRequestCall(indexedDB, 'deleteDatabase', [name]);
     }
   };
@@ -313,4 +317,4 @@
   else {
     self.idb = exp;
   }
-}());
+})());

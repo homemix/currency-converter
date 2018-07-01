@@ -1,11 +1,11 @@
 
 
-var cacheName = 'v1'; 
+let cacheName = 'v1'; 
 
 
-var cacheFiles = [
-  'index.html',
-				'/',
+let cacheFiles = [
+  './index.html',
+				'./',
                 './js/data/idbManager.js',
                 './js/idb.js',
                 './sw.js',
@@ -76,7 +76,7 @@ self.addEventListener('fetch', function(e) {
 
         // else fetch new
 
-        var requestClone = e.request.clone();
+        let requestClone = e.request.clone();
         return fetch(requestClone)
           .then(function(response) {
 
@@ -85,7 +85,7 @@ self.addEventListener('fetch', function(e) {
               return response;
             }
 
-            var responseClone = response.clone();
+            let responseClone = response.clone();
 
            
             caches.open(cacheName).then(function(cache) {
