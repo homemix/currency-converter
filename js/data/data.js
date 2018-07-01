@@ -11,10 +11,9 @@ const fromSelect = document.getElementById("fromCurrency");
 const amountEntry = document.getElementById('amountToConvert');
 const convertedValueEntry = document.getElementById('output');
 
-//create a converter object
 let converter = new Converter(idbMan);
 
-//Get all the currencies, then add them to the Drop downs on the index.html page
+//get currency
 converter.getAllCurrencies( (error, response) => 
         { 
             if(response)
@@ -30,8 +29,6 @@ converter.getAllCurrencies( (error, response) =>
                       let option1 = document.createElement("option");
                         let option2 = document.createElement("option");
 
-                        //format the string which will be displayed in each
-                        //drop down's options.
                         if(!currency.currencySymbol)
                         {    
                             option1.text = `(${currency.id}) ${currency.currencyName}`;

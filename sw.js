@@ -74,7 +74,7 @@ self.addEventListener('fetch', function(e) {
           return response;
         }
 
-        // els fetch new
+        // else fetch new
 
         var requestClone = e.request.clone();
         return fetch(requestClone)

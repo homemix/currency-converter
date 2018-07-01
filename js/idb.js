@@ -117,7 +117,7 @@
     'delete'
   ]);
 
-  // proxy 'next' methods
+ 
   ['advance', 'continue', 'continuePrimaryKey'].forEach(function(methodName) {
     if (!(methodName in IDBCursor.prototype)) return;
     Cursor.prototype[methodName] = function() {

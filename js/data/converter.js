@@ -6,7 +6,7 @@ export default class Converter
 {
     constructor(idbManager)
     {
-        //the idb database to retrieve and save data to and from CACHE database
+        //db to cache files
         this._idbManager = idbManager;
     }
 
@@ -25,10 +25,10 @@ export default class Converter
         const query = fromCurrency + '_' + toCurrency;
         lastQuery = query;
 
-        //we build the URL
+        
         const url = `https://free.currencyconverterapi.com/api/v5/convert?q=${query}&compact=ultra`;
 
-        //Inquire IDB for the objec'ts query
+        //check db contents
         this._idbManager.getQueryValueByID(query, (error, value) => {
 
             if(error){
@@ -36,18 +36,16 @@ export default class Converter
                 return;
             }
 
-            //if the value was not found in idb, query the internet
+            //if no data go to internet
             if(!value){
 
                 fetch(url)
                 .catch(error => callBack(error))
                 .then(results => 
                 {
-                    //Invoke's the call back method of the upper layer using this class after 
-                    //converting the result to json.
                     results.json().then(jsonData => 
                         {
-                            //save the value and the query in idb first
+                           
                             this._idbManager.saveQueryInDatabase(query, jsonData[query]);
 
                             let total = jsonData[query] * amount;
@@ -55,15 +53,14 @@ export default class Converter
                         });
                 });                
             }
-            //If the value was found in idb
+            //If there is data in db return
             else{
-                //get the value of the query
+                
                 let val = value['value'];
                 let total = val * amount;
                 callBack(null, (Math.round(total * 100) / 100));
             }
-            //value.value
-
+           
         })
 
     }

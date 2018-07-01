@@ -8,8 +8,7 @@ export default class IDBManager{
     }
 
     setupDatabase(){
-        // If the browser doesn't support service worker,
-        // we don't care about having a database
+        //check browser compatibility
         if (!navigator.serviceWorker) {
             return Promise.resolve();
         }
