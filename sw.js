@@ -11,6 +11,8 @@ let cacheFiles = [
                 './sw.js',
                 './js/data/converter.js',
                 './js/data/data.js',
+				'./manifest.json',
+				'./logo.png'
                 'https://free.currencyconverterapi.com/api/v5/currencies',
 				'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css',
 				
